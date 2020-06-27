@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Books</string>
+    <string name="textResult_error">Error occurred loading data</string>
+</resources>
