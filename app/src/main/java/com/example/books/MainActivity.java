@@ -1,27 +1,39 @@
 package com.example.books;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.MenuItemCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.SearchView;
 import android.widget.TextView;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
-    TextView tvResponse,tvResult;
+public class MainActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
+    TextView tvResult;
     ProgressBar mProgressBar;
+    RecyclerView recyclerbook;
+    LinearLayoutManager mLinearLayoutManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        tvResponse=findViewById(R.id.tvResponse);
+        recyclerbook=findViewById(R.id.recybooks);
+        mLinearLayoutManager=new LinearLayoutManager(this,RecyclerView.VERTICAL,false);
+        recyclerbook.setLayoutManager(mLinearLayoutManager);
+
+
         try {
             URL url=ApiUtil.buildUrl("cooking");
             new BooksQueryTask().execute(url);
@@ -32,6 +44,23 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        try {
+            URL bookurl=ApiUtil.buildUrl(query);
+            new BooksQueryTask().execute(bookurl);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        return false;
+    }
+
     public class BooksQueryTask extends AsyncTask<URL,Void,String>{
 
         @Override
@@ -53,21 +82,18 @@ public class MainActivity extends AppCompatActivity {
             tvResult=findViewById(R.id.tvResult);
             if (result==null)
             {
-                tvResponse.setVisibility(View.INVISIBLE);
+                recyclerbook.setVisibility(View.INVISIBLE);
                 tvResult.setVisibility(View.VISIBLE);
             }
             else {
                 tvResult.setVisibility(View.INVISIBLE);
-                tvResponse.setVisibility(View.VISIBLE);
+                recyclerbook.setVisibility(View.VISIBLE);
 
             }
             ArrayList<Book> books=ApiUtil.getBooksFromJSON(result);
             String resultString="";
-            for (Book book:books)
-            {
-                resultString=resultString+book.title+"\n"+book.publishDate+"\n\n";
-            }
-            tvResponse.setText(resultString);
+           BookRecyclerviewAdapter bookRecyclerviewAdapter=new BookRecyclerviewAdapter(MainActivity.this,books);
+            recyclerbook.setAdapter(bookRecyclerviewAdapter);
 
         }
 
@@ -77,5 +103,14 @@ public class MainActivity extends AppCompatActivity {
             mProgressBar=findViewById(R.id.progressBar);
             mProgressBar.setVisibility(View.VISIBLE);
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main,menu);
+        final MenuItem menuItem=menu.findItem(R.id.searchbook);
+        final SearchView searchView= (SearchView) MenuItemCompat.getActionView(menuItem);
+        searchView.setOnQueryTextListener(this);
+        return true;
     }
 }
