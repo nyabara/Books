@@ -1,6 +1,7 @@
 package com.example.books;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,20 +36,10 @@ public class BookRecyclerviewAdapter extends RecyclerView.Adapter<BookRecyclervi
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Book book=mBooks.get(position);
         holder.textTitle.setText(book.title);
-        String authors="";
-        int i=0;
-        for (String author:book.author)
-        {
-            authors+=author;
-            i++;
-            if (i<book.author.length)
-            {
-                authors+=",";
-            }
-        }
-        holder.textAuthor.setText(authors);
+        holder.textAuthor.setText(book.author);
         holder.textPublish.setText(book.publisher);
         holder.textpublishedDate.setText(book.publishDate);
+        holder.currentPosition=position;
 
     }
 
@@ -59,12 +50,22 @@ public class BookRecyclerviewAdapter extends RecyclerView.Adapter<BookRecyclervi
 
     public class ViewHolder extends RecyclerView.ViewHolder {
     TextView textTitle,textAuthor,textPublish,textpublishedDate;
+    public int currentPosition;
     public ViewHolder(@NonNull View itemView) {
         super(itemView);
         textTitle=itemView.findViewById(R.id.textTitle);
         textAuthor=itemView.findViewById(R.id.textAuthor);
         textPublish=itemView.findViewById(R.id.textPublish);
         textpublishedDate=itemView.findViewById(R.id.textpublishDate);
+        itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(mContext,BookDetailActivity.class);
+                Book selectedbook=mBooks.get(currentPosition);
+                intent.putExtra("Book",selectedbook);
+                mContext.startActivity(intent);
+            }
+        });
     }
 }
 }
