@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">Books</string>
     <string name="textResult_error">Error occurred loading data</string>
+    <string name="hint_isbn">insert isbn</string>
+    <string name="hint_publisher">insert publisher</string>
+    <string name="hint_author">insert author</string>
+    <string name="hint_title">insert title</string>
+    <string name="hint_search">Search</string>
+    <string name="hint_advanced_search">advanced search</string>
 </resources>

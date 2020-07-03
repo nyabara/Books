@@ -5,6 +5,9 @@
         android:id="@+id/searchbook"
         app:actionViewClass="android.widget.SearchView"
         app:showAsAction="always"/>
+    <item android:title="@string/hint_advanced_search"
+        android:id="@+id/advanced_search_id"
+        app:showAsAction="never"/>
 
 
 </menu>

@@ -1,10 +1,12 @@
 package com.example.books;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.MenuItemCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,6 +18,7 @@ import android.widget.SearchView;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
@@ -32,11 +35,18 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         recyclerbook=findViewById(R.id.recybooks);
         mLinearLayoutManager=new LinearLayoutManager(this,RecyclerView.VERTICAL,false);
         recyclerbook.setLayoutManager(mLinearLayoutManager);
+        Intent intent=getIntent();
+        String queryUrl=intent.getStringExtra("Query");
 
-
+        URL bookurl;
         try {
-            URL url=ApiUtil.buildUrl("cooking");
-            new BooksQueryTask().execute(url);
+            if (queryUrl==null||queryUrl.isEmpty()){
+                bookurl=ApiUtil.buildUrl("cooking");
+            }
+            else{
+                bookurl=new URL(queryUrl);
+            }
+            new BooksQueryTask().execute(bookurl);
 
         } catch (Exception e) {
             //e.printStackTrace();
@@ -44,6 +54,20 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         }
 
     }
+
+//    @Override
+//    protected void onNewIntent(Intent intent) {
+//        super.onNewIntent(intent);
+//       String query =intent.getStringExtra("Query");
+//        setIntent(intent);
+//        URL bookurl=null;
+//        try {
+//            bookurl=new URL(query);
+//            new BooksQueryTask().execute(bookurl);
+//        } catch (MalformedURLException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     @Override
     public boolean onQueryTextSubmit(String query) {
@@ -88,12 +112,11 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             else {
                 tvResult.setVisibility(View.INVISIBLE);
                 recyclerbook.setVisibility(View.VISIBLE);
-
+                ArrayList<Book> books=ApiUtil.getBooksFromJSON(result);
+                BookRecyclerviewAdapter bookRecyclerviewAdapter=new BookRecyclerviewAdapter(MainActivity.this,books);
+                recyclerbook.setAdapter(bookRecyclerviewAdapter);
             }
-            ArrayList<Book> books=ApiUtil.getBooksFromJSON(result);
-            String resultString="";
-           BookRecyclerviewAdapter bookRecyclerviewAdapter=new BookRecyclerviewAdapter(MainActivity.this,books);
-            recyclerbook.setAdapter(bookRecyclerviewAdapter);
+
 
         }
 
@@ -111,6 +134,40 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         final MenuItem menuItem=menu.findItem(R.id.searchbook);
         final SearchView searchView= (SearchView) MenuItemCompat.getActionView(menuItem);
         searchView.setOnQueryTextListener(this);
+        //creating menus dynamically
+        ArrayList<String> recentList=SpUtil.getQueryList(getApplicationContext());
+        int itemNum=recentList.size();
+        MenuItem recentMenu;
+        for (int i=0;i<itemNum;i++)
+        {
+            recentMenu=menu.add(Menu.NONE,i,Menu.NONE,recentList.get(i));
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.advanced_search_id:
+                startActivity(new Intent(MainActivity.this,SearchActivity.class));
+                break;
+                //respond to click
+                default:
+                    int position=item.getItemId()+1;
+                    String preferenceName=SpUtil.QUERY+String.valueOf(position);
+                    String query=SpUtil.getPreferenceString(getApplicationContext(),preferenceName);
+                    String[] prefparams=query.split("\\,");
+                    String[] queryparams=new String[4];
+                    for (int i=0;i<prefparams.length;i++)
+                    {
+                        queryparams[i]=prefparams[i];
+                    }
+                    URL bookurl=ApiUtil.buildUrl(queryparams[0]==null?"":queryparams[0],
+                            queryparams[1]==null?"":queryparams[1],
+                            queryparams[2]==null?"":queryparams[2],
+                            queryparams[3]==null?"":queryparams[3]);
+                    new BooksQueryTask().execute(bookurl);
+        }
         return true;
     }
 }
